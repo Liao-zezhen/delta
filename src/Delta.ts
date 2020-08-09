@@ -11,6 +11,10 @@ class Delta {
   static AttributeMap = AttributeMap;
 
   ops: Op[];
+
+  /**
+   * 对空配置项做处理，默认为[]。
+   */
   constructor(ops?: Op[] | { ops: Op[] }) {
     // Assume we are given a well formed ops
     if (Array.isArray(ops)) {
@@ -22,12 +26,19 @@ class Delta {
     }
   }
 
+  /**
+   * 插入数据。
+   * 对空字符串和空属性集合做处理。
+   */
   insert(arg: string | object, attributes?: AttributeMap): this {
     const newOp: Op = {};
+    // 插入空字符串，不做任何操作，直接返回实例。
     if (typeof arg === 'string' && arg.length === 0) {
       return this;
     }
     newOp.insert = arg;
+
+    // attributes必须要有属性，才能被设置。
     if (
       attributes != null &&
       typeof attributes === 'object' &&
@@ -38,6 +49,10 @@ class Delta {
     return this.push(newOp);
   }
 
+  /**
+   * 删除操作。
+   * 删除长度小于1的话，不做任何操作。
+   */
   delete(length: number): this {
     if (length <= 0) {
       return this;
@@ -45,6 +60,11 @@ class Delta {
     return this.push({ delete: length });
   }
 
+  /**
+   * 保留操作。
+   * 保留长度小于1的话，不做任何操作。
+   * 对空属性集合做处理。
+   */
   retain(length: number, attributes?: AttributeMap): this {
     if (length <= 0) {
       return this;
@@ -60,11 +80,17 @@ class Delta {
     return this.push(newOp);
   }
 
+  /**
+   * 如果前后两个配置项都是删除，合并删除操作；
+   * 如果前后两个配置项都是保留或者插入字符串的操作，并且属性集合一致的话，合并这些操作；
+   * 如果在删除操作之后插入数据的话，需要将插入操作放在删除操作之前。
+   */
   push(newOp: Op): this {
     let index = this.ops.length;
     let lastOp = this.ops[index - 1];
     newOp = cloneDeep(newOp);
     if (typeof lastOp === 'object') {
+      // 如果最后一个配置项与新增的配置项都是delete操作的话，那么合并delete操作。
       if (
         typeof newOp.delete === 'number' &&
         typeof lastOp.delete === 'number'
@@ -74,6 +100,7 @@ class Delta {
       }
       // Since it does not matter if we insert before or after deleting at the same index,
       // always prefer to insert first
+      // 如果在删除操作之后插入数据的话，需要将插入操作放在删除操作之前。
       if (typeof lastOp.delete === 'number' && newOp.insert != null) {
         index -= 1;
         lastOp = this.ops[index - 1];
@@ -82,11 +109,13 @@ class Delta {
           return this;
         }
       }
+      // 如果上一个配置项的属性集合与新增的属性集合一致的话。
       if (isEqual(newOp.attributes, lastOp.attributes)) {
         if (
           typeof newOp.insert === 'string' &&
           typeof lastOp.insert === 'string'
         ) {
+          // 如果最后一个配置项和新增的配置项都是插入操作，并且数据都是字符串的话，合并两个插入操作。
           this.ops[index - 1] = { insert: lastOp.insert + newOp.insert };
           if (typeof newOp.attributes === 'object') {
             this.ops[index - 1].attributes = newOp.attributes;
@@ -96,6 +125,7 @@ class Delta {
           typeof newOp.retain === 'number' &&
           typeof lastOp.retain === 'number'
         ) {
+          // 如果最后一个配置项和新增的配置项都是保留操作的话，那么合并两个保留操作。
           this.ops[index - 1] = { retain: lastOp.retain + newOp.retain };
           if (typeof newOp.attributes === 'object') {
             this.ops[index - 1].attributes = newOp.attributes;
@@ -105,14 +135,20 @@ class Delta {
       }
     }
     if (index === this.ops.length) {
+      // 如果配置项集合没有数据的话，直接将数据推进集合中。
       this.ops.push(newOp);
     } else {
+      // 否则在指定索引处，插入配置项。
       this.ops.splice(index, 0, newOp);
     }
     return this;
   }
 
+  /**
+   * 如果最后一个配置项的操作是保留，并且不设置任何属性集合的话，那么抛弃这个操作。
+   */
   chop(): this {
+    // 如果最后一个配置项的操作是保留，并且不设置任何属性集合的话，那么抛弃这个操作。
     const lastOp = this.ops[this.ops.length - 1];
     if (lastOp && lastOp.retain && !lastOp.attributes) {
       this.ops.pop();
@@ -188,12 +224,18 @@ class Delta {
     const otherIter = Op.iterator(other.ops);
     const ops = [];
     const firstOther = otherIter.peek();
+
+    // 如果第一个配置项的操作是retain，并且没有设置属性集合的话。
     if (
       firstOther != null &&
       typeof firstOther.retain === 'number' &&
       firstOther.attributes == null
     ) {
+      // 保留的个数。
       let firstLeft = firstOther.retain;
+
+      // 原配置项集合的当前配置项如果是插入操作的话，
+      // 并且该配置项的长度小于或等于保留的个数。
       while (
         thisIter.peekType() === 'insert' &&
         thisIter.peekLength() <= firstLeft
@@ -201,27 +243,44 @@ class Delta {
         firstLeft -= thisIter.peekLength();
         ops.push(thisIter.next());
       }
+      // firstOther.retain - firstLeft 计算保留了多少位的数据。
       if (firstOther.retain - firstLeft > 0) {
         otherIter.next(firstOther.retain - firstLeft);
       }
     }
     const delta = new Delta(ops);
     while (thisIter.hasNext() || otherIter.hasNext()) {
+      // 优先执行其他配置项集合的插入操作。
       if (otherIter.peekType() === 'insert') {
         delta.push(otherIter.next());
+        // 次之执行原配置项集合的删除操作。
       } else if (thisIter.peekType() === 'delete') {
         delta.push(thisIter.next());
       } else {
+        // otherIter.retain
+        // thisIter.insert => insert
+        // thisIter.retain => retain
+
+        // otherIter.delete
+        // thisIter.retain => delete
+        // thisIter.insert => 不做任何操作
+
+        // 取最短的操作长度。
         const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
         const thisOp = thisIter.next(length);
         const otherOp = otherIter.next(length);
+
+        // 其他配置项的保留操作。
         if (typeof otherOp.retain === 'number') {
           const newOp: Op = {};
+
+          // 判断操作的类型，并保存数据。
           if (typeof thisOp.retain === 'number') {
             newOp.retain = length;
           } else {
             newOp.insert = thisOp.insert;
           }
+
           // Preserve null when composing with a retain, otherwise remove it for inserts
           const attributes = AttributeMap.compose(
             thisOp.attributes,
@@ -231,9 +290,11 @@ class Delta {
           if (attributes) {
             newOp.attributes = attributes;
           }
+
           delta.push(newOp);
 
           // Optimization if rest of other is just retain
+          // 如果其他配置集合没有数据的话，并且当前数据中最后数据不包含删除操作的话，就合并剩余的原配置项。
           if (
             !otherIter.hasNext() &&
             isEqual(delta.ops[delta.ops.length - 1], newOp)
@@ -241,20 +302,25 @@ class Delta {
             const rest = new Delta(thisIter.rest());
             return delta.concat(rest).chop();
           }
-
           // Other op should be delete, we could be an insert or retain
           // Insert + delete cancels out
         } else if (
           typeof otherOp.delete === 'number' &&
           typeof thisOp.retain === 'number'
         ) {
+          // 保留删除操作。
           delta.push(otherOp);
         }
+
+        // 如果不被以上程序执行的话，意味着被遍历到的数据不被保存，如：原配置项的插入 + 其他配置项的删除。
       }
     }
     return delta.chop();
   }
 
+  /**
+   * 递归合并配置项。
+   */
   concat(other: Delta): Delta {
     const delta = new Delta(this.ops.slice());
     if (other.ops.length > 0) {
@@ -265,15 +331,18 @@ class Delta {
   }
 
   diff(other: Delta, cursor?: number | diff.CursorInfo): Delta {
+    // 如果配置项相等的话，返回空的配置项。
     if (this.ops === other.ops) {
       return new Delta();
     }
     const strings = [this, other].map((delta) => {
       return delta
         .map((op) => {
+          // 非字符串的数据返回空字符串、
           if (op.insert != null) {
             return typeof op.insert === 'string' ? op.insert : NULL_CHARACTER;
           }
+          // diff()不允许非insert的操作。
           const prep = delta === other ? 'on' : 'with';
           throw new Error('diff() called ' + prep + ' non-document');
         })

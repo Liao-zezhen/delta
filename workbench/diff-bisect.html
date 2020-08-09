@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.myers-box {
+			display: flex;
+			border: 1px solid #dadada;
+			border-radius: 8px;
+			margin: 20px;
+		}
+
+		.myers-box i {
+			display: block;
+			width: 40px;
+			height: 30px;
+			line-height: 30px;
+			text-align: center;
+			box-sizing: border-box;
+			margin-right: 1px;
+			margin-bottom: 1px;
+			font-style: normal;
+		}
+
+		.myers-box i:not(:empty) {
+			background: #ffc107;
+		}
+
+		.myers-box i:empty {
+			background: #e8e8e8;
+		}
+
+		.myers-box i.active {
+			background: red;
+		}
+
+		.myers-box p {
+			overflow: hidden;
+		}
+
+		.myers-box p:first-child {
+			margin-left: 1em;
+			border-radius: 8px 0 0 8px;
+		}
+
+		.myers-box p:last-child {
+			margin-right: 1em;
+			border-radius: 0 8px 8px 0;
+		}
+
+		.myers-box p:first-child i:not(:empty) {
+			background: #03A9F4;
+    		color: #fff;
+		}
+
+		.myers-box i:first-child:not(:empty) {
+			background: #03A9F4;
+			color: #fff;
+		}
+    </style>
+</head>
+<body>
+    <!-- <script src="./diff-bisect.js"></script> -->
+    <!-- <script src="./myers-3.js"></script> -->
+    <script src="./diff-bisect-2.js"></script>
+</body>
+</html>
