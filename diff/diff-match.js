@@ -58,6 +58,7 @@ function diff_halfMatch_(text1, text2) {
       );
       console.log(suffixLength);
 
+      console.log(suffixLength + prefixLength);
       if (best_common.length < suffixLength + prefixLength) {
           // 提取相同字符串。
         best_common =
@@ -90,6 +91,7 @@ function diff_halfMatch_(text1, text2) {
   }
 
   // First check if the second quarter is the seed for a half-match.
+  // 查询[1/4 - 2/4]之间的字符串。
   const hm1 = diff_halfMatchI_(
     longtext,
     shorttext,
@@ -97,6 +99,7 @@ function diff_halfMatch_(text1, text2) {
   );
 
   // Check again based on the third quarter.
+  // 查询[2/4 - 3/4]之间的字符串。
   const hm2 = diff_halfMatchI_(
     longtext,
     shorttext,

@@ -43,6 +43,7 @@ export default class Iterator {
       const offset = this.offset;
       // 返回配置项的长度，如果是插入非字符串的话，始终返回1，那么无法进行偏移。
       const opLength = Op.length(nextOp);
+      // 如果偏移量到达或超出边界的话，索引累加；
       if (length >= opLength - offset) {
         length = opLength - offset;
         this.index += 1;
@@ -101,6 +102,7 @@ export default class Iterator {
    */
   peekType(): string {
     if (this.ops[this.index]) {
+      // 删除优先。
       if (typeof this.ops[this.index].delete === 'number') {
         return 'delete';
       } else if (typeof this.ops[this.index].retain === 'number') {

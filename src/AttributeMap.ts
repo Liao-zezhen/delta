@@ -13,7 +13,8 @@ namespace AttributeMap {
    * B从A中拷贝值，如果B存在该属性的话，则不需要进行拷贝。
    *
    * 保留A和B所有属性，保留下来的属性的值以b为主，否则以a为主。
-   * 如果keepNull为false的话，那么从保留下来的属性中，排除掉在B中值为null的属性。
+   * xxx 如果keepNull为false的话，那么从保留下来的属性中，排除掉在B中值为null的属性。
+   * 当keepNull设置为false的话，那么b中的属性设置为null，相当于移除该属性；
    */
   export function compose(
     a: AttributeMap = {},
@@ -32,6 +33,7 @@ namespace AttributeMap {
     if (!keepNull) {
       attributes = Object.keys(attributes).reduce<AttributeMap>((copy, key) => {
         if (attributes[key] != null) {
+          // 保存B中的属性和值；
           copy[key] = attributes[key];
         }
         return copy;
@@ -39,7 +41,9 @@ namespace AttributeMap {
     }
     for (const key in a) {
       // B从A中拷贝值，如果B存在该属性的话，则不需要进行拷贝。
+      // b[key] === undefined 以B中的值为主，否则以A中的值作为后补。
       if (a[key] !== undefined && b[key] === undefined) {
+        // 保存A中的属性和值；
         attributes[key] = a[key];
       }
     }
@@ -47,7 +51,7 @@ namespace AttributeMap {
   }
 
   /**
-   * 从A和B中找出值不相同的数据，B指定属性的值不存在的话，默认为null。
+   * xxx 从A和B中找出值不相同的数据，B指定属性的值不存在的话，默认为null。
    *
    * 保留A和B所有值不相同的属性，保留下来的属性的值以b为主，否则设置为null
    */
@@ -75,8 +79,8 @@ namespace AttributeMap {
   }
 
   /**
-   * 保留base和attr存在相同属性但值不相同的属性，值设置为base属性的值；
-   * 保留attr存在但base不存在的属性，值设置为null。
+   * xxx 保留base和attr存在相同属性但值不相同的属性，值设置为base属性的值；
+   * xxx 保留attr存在但base不存在的属性，值设置为null。
    *
    * 保留attr的所有存在值的属性，保留下来的属性的值以base为主，否则设置为null。
    * 如果attr和base存在值相同的属性，则不保留。
@@ -104,7 +108,7 @@ namespace AttributeMap {
   }
 
   /**
-   * 如果设置priority为true的话，那么从b中获取a没有的属性；false的话，则返回b。
+   * 如果设置priority为true的话，那么返回a在b中没有的属性；false的话，则返回b。
    */
   export function transform(
     a: AttributeMap | undefined,

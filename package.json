@@ -8,8 +8,10 @@
   "dependencies": {
     "exif-js": "^2.3.0",
     "fast-diff": "1.2.0",
+    "lodash": "^4.17.20",
     "lodash.clonedeep": "^4.5.0",
-    "lodash.isequal": "^4.5.0"
+    "lodash.isequal": "^4.5.0",
+    "seedrandom": "^3.0.5"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.0",
@@ -38,7 +40,8 @@
     "test": "npm run build; jasmine test/*.js test/**/*.js",
     "test:coverage": "istanbul cover jasmine test/*.js test/**/*.js",
     "test:coverage:report": "cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "test2": "jasmine test2/*.js test2/**/*.js"
+    "test2": "jasmine test2/*.js test2/**/*.js",
+    "test:user": "jasmine user/*.js"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",

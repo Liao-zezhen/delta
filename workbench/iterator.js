@@ -1,29 +1,31 @@
 import Iterator from '../src/Iterator';
 
 const iter = new Iterator([
-  {
-    insert: '100',
-    attributes: {
-      bold: true,
-    },
-  },
-  {
-    retain: 100,
-  },
-  {
-    insert: 20,
-  },
+  { insert: 2 },
+  { insert: 'Hello', attributes: { bold: true } },
+  { retain: 3 },
+  { insert: 2, attributes: { src: 'http://quilljs.com' } },
+  { delete: 4 },
 ]);
 
-/* console.log(iter.next(2));
-console.log(iter.rest()); */
-/* console.log(iter.next(1));
-console.log(iter.next(50));
-console.log(iter.next(50)); */
+iter.offset = 10;
+// console.log(iter.peek());
 
-// console.log(interator.next(2));
+console.log(iter.next(1000));
+iter.next(10000);
+iter.next(10000);
+iter.next(10000);
+iter.next(3);
+console.log(iter.rest());
 
-// console.log(interator.hasNext());
-// console.log(iter.peekType());
+/* ops
+index
+offset
 
-// new Iterator();
+hasNext()
+peekLength()
+peekType()
+peek()
+
+next(n)
+rest() */

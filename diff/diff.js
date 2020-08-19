@@ -29,6 +29,8 @@
  * [[DIFF_DELETE, 'Hello'], [DIFF_INSERT, 'Goodbye'], [DIFF_EQUAL, ' world.']]
  * which means: delete 'Hello', add 'Goodbye' and keep ' world.'
  */
+import clonedeep from 'lodash.clonedeep';
+
 const DIFF_DELETE = -1;
 const DIFF_INSERT = 1;
 const DIFF_EQUAL = 0;
@@ -83,9 +85,8 @@ function diff_main(text1, text2, cursor_pos, _fix_unicode) {
     diffs.push([DIFF_EQUAL, commonsuffix]);
   }
 
-  console.log(diffs, _fix_unicode);
-
   diff_cleanupMerge(diffs, _fix_unicode);
+
   return diffs;
 }
 
